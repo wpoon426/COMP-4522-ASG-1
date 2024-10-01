@@ -13,6 +13,9 @@ transactions = [
 # Log for rollback (storing old values before modification)
 Data_log = []
 
+
+
+
 def read_file(file_name:str)->list:
     
     data = []
@@ -35,14 +38,9 @@ def read_file(file_name:str)->list:
     return data
 
 
-def is_there_a_failure()->bool:
+def is_there_a_failure():
     
-    value = csv.randint(0,1)
-    if value == 1:
-        result = True
-    else:
-        result = False
-    return result
+    ''''''
 
 
 def main():
