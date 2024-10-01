@@ -1,22 +1,7 @@
 
-#Initializing the database
-database = [
-    {'Unique_ID': 1, 'First_name': 'John', 'Last_name': 'Lennon', 'Salary': 230000, 'Department': 'Projects', 'Civil_status': 'Married'},
-    {'Unique_ID': 2, 'First_name': 'Joan', 'Last_name': 'Doe', 'Salary': 100000, 'Department': 'Human Resources', 'Civil_status': 'Single'},
-    {'Unique_ID': 3, 'First_name': 'Mary', 'Last_name': 'Carpenter', 'Salary': 250000, 'Department': 'Projects', 'Civil_status': 'Separated'},
-    {'Unique_ID': 4, 'First_name': 'John', 'Last_name': 'Ingham', 'Salary': 125000, 'Department': 'Projects', 'Civil_status': 'Separated'},
-    {'Unique_ID': 5, 'First_name': 'Rachel', 'Last_name': 'Sturgeon', 'Salary': 197000, 'Department': 'Engineering', 'Civil_status': 'Married'},
-    {'Unique_ID': 6, 'First_name': 'Hanifa', 'Last_name': 'Salima', 'Salary': 50000, 'Department': 'Engineering', 'Civil_status': 'Married'},
-    {'Unique_ID': 7, 'First_name': 'Femi', 'Last_name': 'Okeke', 'Salary': 425000, 'Department': 'Industries', 'Civil_status': 'Married'},
-    {'Unique_ID': 8, 'First_name': 'Moe', 'Last_name': 'Khalifa', 'Salary': 325000, 'Department': 'Industries', 'Civil_status': 'Married'},
-    {'Unique_ID': 9, 'First_name': 'Katy', 'Last_name': 'Jones', 'Salary': 475000, 'Department': 'Management', 'Civil_status': 'Single'},
-    {'Unique_ID': 10, 'First_name': 'Lin', 'Last_name': 'Wang', 'Salary': 435000, 'Department': 'Engineering', 'Civil_status': 'Married'},
-    {'Unique_ID': 11, 'First_name': 'Art', 'Last_name': 'Blanket', 'Salary': 137000, 'Department': 'Projects', 'Civil_status': 'Single'},
-    {'Unique_ID': 12, 'First_name': 'Vivek', 'Last_name': 'Singh', 'Salary': 231000, 'Department': 'Industries', 'Civil_status': 'Married'},
-    {'Unique_ID': 13, 'First_name': 'Amal', 'Last_name': 'Khan', 'Salary': 230000, 'Department': 'Projects', 'Civil_status': 'Single'},
-    {'Unique_ID': 14, 'First_name': 'Richard', 'Last_name': 'Carpenter', 'Salary': 123000, 'Department': 'Human Resources', 'Civil_status': 'Single'},
-    {'Unique_ID': 15, 'First_name': 'Ryuichi', 'Last_name': 'Sakamoto', 'Salary': 321000, 'Department': 'Processing Facilities', 'Civil_status': 'Single'}
-]
+import csv
+
+data_base = []
 
 #transaction que
 transactions = [
@@ -26,5 +11,76 @@ transactions = [
 ]
 
 # Log for rollback (storing old values before modification)
-log = []
+Data_log = []
+
+def read_file(file_name:str)->list:
+    
+    data = []
+    #
+    # one line at-a-time reading file
+    #
+    with open(file_name, 'r') as reader:
+    # Read and print the entire file line by line
+        line = reader.readline()
+        while line != '':  # The EOF char is an empty string
+            line = line.strip().split(',')
+            data.append(line)
+            # get the next line
+            line = reader.readline()
+    size = len(data)
+    print('The data entries BEFORE updates are presented below:')
+    for item in data:
+        print(item)
+    print(f"\nThere are {size} records in the DB, including the header.\n")
+    return data
+
+
+def is_there_a_failure()->bool:
+    
+    value = csv.randint(0,1)
+    if value == 1:
+        result = True
+    else:
+        result = False
+    return result
+
+
+def main():
+    number_of_transactions = len(transactions)
+    must_recover = False
+    data_base = read_file('Employees_DB_ADV.csv')
+    failure = is_there_a_failure()
+    failing_transaction_index = None
+    # Process transaction
+    while not failure:
+        for index in range(number_of_transactions):
+            print(f"\nProcessing transaction No. {index+1}.")
+            # In your assignment, a failure will occur
+            # whilst processing Transaction No. 2
+            failure = is_there_a_failure()
+            if failure:
+                must_recover = True
+                transaction_fail_index = index + 1 
+                print(f'There was a failure while processing the transaction # {transaction_fail_index}')
+                break
+            # Do Recovery process as per the proper method
+                failing_transaction_index = index + 1
+            else:
+            # All good, update Log Record & DB as required
+                print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
+                print('The data entries AFTER all work is completed are presented below:')
+    for item in data_base:
+        print(item)
+    # Print here the contents of your Log Record System, please.
+
+    main()
+
+
+    
+
+
+
+
+
+
 
