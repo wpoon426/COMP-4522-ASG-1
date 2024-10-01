@@ -19,8 +19,12 @@ database = [
 ]
 
 #transaction que
-transaction = [
+transactions = [
     {'ID': 1, 'Attribute': 'Department', 'New_value': 'Music'},
     {'ID': 5, 'Attribute': 'Civil_status', 'New_value': 'Divorced'},
     {'ID': 15, 'Attribute': 'Salary', 'New_value': 200000}
 ]
+
+# Log for rollback (storing old values before modification)
+log = []
+
