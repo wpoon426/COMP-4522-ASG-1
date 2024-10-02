@@ -57,12 +57,12 @@ def main():
             # whilst processing Transaction No. 2
             failure = is_there_a_failure()
             if failure:
-                must_recover = True
-                transaction_fail_index = index + 1 
-                print(f'There was a failure while processing the transaction # {transaction_fail_index}')
-                break
             # Do Recovery process as per the proper method
+                must_recover = True
                 failing_transaction_index = index + 1
+                print(f'There was a failure while processing the transaction # {failing_transaction_index}')
+                break
+                
             else:
             # All good, update Log Record & DB as required
                 print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
