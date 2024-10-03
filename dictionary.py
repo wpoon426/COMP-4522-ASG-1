@@ -1,5 +1,6 @@
 
 import csv
+import datetime
 
 data_base = []
 
@@ -9,16 +10,28 @@ transactions = [
     {'ID': 5, 'Attribute': 'Civil_status', 'New_value': 'Divorced'},
     {'ID': 15, 'Attribute': 'Salary', 'New_value': 200000}
 ]
+# function to update rows. Gonna try to make into dict first to acces values easier 
+'''
+def update_db_row(data,transactions):
+    data_row = []
+    for item in data:
+        if(item[0] == transactions[0]['ID'])
+            for i in item 
+                if(i == transactions[0][''])
+
+    return data_row
+'''
 
 # Log for rollback (storing old values before modification)
-Data_log = []
 
+#def logData(data):
 
 
 
 def read_file(file_name:str)->list:
     
     data = []
+    Data_log = []
     #
     # one line at-a-time reading file
     #
@@ -47,37 +60,38 @@ def main():
     number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
+    
     failure = is_there_a_failure()
     failing_transaction_index = None
     # Process transaction
-    while not failure:
-        for index in range(number_of_transactions):
-            print(f"\nProcessing transaction No. {index+1}.")
-            # In your assignment, a failure will occur
-            # whilst processing Transaction No. 2
-            failure = is_there_a_failure()
-            if failure:
+    
+    for index in range(number_of_transactions):
+        print(f"\nProcessing transaction No. {index+1}.")
+        # In your assignment, a failure will occur
+        # whilst processing Transaction No. 2
+        failure = is_there_a_failure()
+        if failure:
             # Do Recovery process as per the proper method
-                must_recover = True
-                failing_transaction_index = index + 1
-                print(f'There was a failure while processing the transaction # {failing_transaction_index}')
-                break
+            must_recover = True
+            failing_transaction_index = index + 1
+            print(f'There was a failure while processing the transaction # {failing_transaction_index}')
+            break
                 
-            else:
+        else:
             # All good, update Log Record & DB as required
-                print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
-                print('The data entries AFTER all work is completed are presented below:')
+
+            #putting main memory db(python list) into secondary memory(new csv file) after changes
+            with open ('testDB.csv', 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(data_base)
+            print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
+            print('The data entries AFTER all work is completed are presented below:')
+
     for item in data_base:
         print(item)
     # Print here the contents of your Log Record System, please.
 
-    main()
-
-
-    
-
-
-
+main()
 
 
 
