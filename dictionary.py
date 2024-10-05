@@ -6,21 +6,36 @@ data_base = []
 
 #transaction que
 transactions = [
-    {'ID': 1, 'Attribute': 'Department', 'New_value': 'Music'},
-    {'ID': 5, 'Attribute': 'Civil_status', 'New_value': 'Divorced'},
-    {'ID': 15, 'Attribute': 'Salary', 'New_value': 200000}
+    { 1, 'Department',  'Music'},
+    {5,  'Civil_status','Divorced'},
+    { 15, 'Salary', '200000'}
 ]
-# function to update rows. Gonna try to make into dict first to acces values easier 
-'''
-def update_db_row(data,transactions):
-    data_row = []
-    for item in data:
-        if(item[0] == transactions[0]['ID'])
-            for i in item 
-                if(i == transactions[0][''])
+# function to update rows. 
+# currently hardcoded. MUST change to not be 
+def update_db_row(data,transactions,count):
+    if count == 0:
+        for item in data[1:15]:
+            if item[0] == '1':
+                before = item[4]
+                item[4] = 'Music'
+                return (item[4],before)
+    elif count == 1:
+        for item in data[1:16]:
+            if item[0] == '5':
+                before = item[5]
+                item[5] = 'Divorced'
+                return (item[5],before)
+    elif count == 2:
+        for item in data[1:16]:
+            if item[0] == '15':
+                item[3] = '200000'
+                before = item[3]
+                return (item[3],before)
+            
+ 
+        
 
-    return data_row
-'''
+  
 
 # Log for rollback (storing old values before modification)
 
@@ -31,7 +46,6 @@ def update_db_row(data,transactions):
 def read_file(file_name:str)->list:
     
     data = []
-    Data_log = []
     #
     # one line at-a-time reading file
     #
@@ -49,22 +63,35 @@ def read_file(file_name:str)->list:
         print(item)
     print(f"\nThere are {size} records in the DB, including the header.\n")
     return data
+  
+
+def logUpdates(before,after,status,count):  
+    log = {'Log_ID': count, 'Before':before, 'After': after,'UpdateStatus': status ,'TimeStamp': datetime.time} 
+    print(before,after) 
+
+    return log
+
+
 
 
 def is_there_a_failure():
+    print()
     
-    ''''''
 
 
 def main():
+    logs = []
+    count = 0
     number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
     
+
     failure = is_there_a_failure()
     failing_transaction_index = None
     # Process transaction
-    
+    update_db_row(data_base,transactions,count)
+
     for index in range(number_of_transactions):
         print(f"\nProcessing transaction No. {index+1}.")
         # In your assignment, a failure will occur
@@ -72,13 +99,19 @@ def main():
         failure = is_there_a_failure()
         if failure:
             # Do Recovery process as per the proper method
+            status = 'failure'
             must_recover = True
             failing_transaction_index = index + 1
             print(f'There was a failure while processing the transaction # {failing_transaction_index}')
             break
                 
         else:
+            status = 'Complete'
             # All good, update Log Record & DB as required
+            after, before = update_db_row(data_base,transactions,count)
+            print("**************************************")
+            logs.append(logUpdates(before,after,status,count))
+            count = count + 1  
 
             #putting main memory db(python list) into secondary memory(new csv file) after changes
             with open ('testDB.csv', 'w', newline='') as csvfile:
@@ -86,11 +119,13 @@ def main():
                 writer.writerows(data_base)
             print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
             print('The data entries AFTER all work is completed are presented below:')
+            
 
     for item in data_base:
         print(item)
-    # Print here the contents of your Log Record System, please.
 
+    # Print here the contents of your Log Record System, please.
+    print(logs)
 main()
 
 
