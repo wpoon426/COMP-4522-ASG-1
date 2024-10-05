@@ -6,41 +6,10 @@ data_base = []
 
 #transaction que
 transactions = [
-    { 1, 'Department',  'Music'},
-    {5,  'Civil_status','Divorced'},
-    { 15, 'Salary', '200000'}
+    (1, 'Department', 'Music'),  
+    (5, 'Civil_status', 'Divorced'),  
+    (15, 'Salary', '200000')
 ]
-# function to update rows. 
-# currently hardcoded. MUST change to not be 
-def update_db_row(data,transactions,count):
-    if count == 0:
-        for item in data[1:15]:
-            if item[0] == '1':
-                before = item[4]
-                item[4] = 'Music'
-                return (item[4],before)
-    elif count == 1:
-        for item in data[1:16]:
-            if item[0] == '5':
-                before = item[5]
-                item[5] = 'Divorced'
-                return (item[5],before)
-    elif count == 2:
-        for item in data[1:16]:
-            if item[0] == '15':
-                item[3] = '200000'
-                before = item[3]
-                return (item[3],before)
-            
- 
-        
-
-  
-
-# Log for rollback (storing old values before modification)
-
-#def logData(data):
-
 
 
 def read_file(file_name:str)->list:
@@ -58,59 +27,108 @@ def read_file(file_name:str)->list:
             # get the next line
             line = reader.readline()
     size = len(data)
-    print('The data entries BEFORE updates are presented below:')
+    print('\nThe data entries BEFORE updates are presented below:\n')
     for item in data:
         print(item)
     print(f"\nThere are {size} records in the DB, including the header.\n")
     return data
+
+# function to update rows. 
+# currently hardcoded. MUST change to not be 
+def update_db_row(data,transaction_id,attribute,new):
+
+    attributemapping = {
+        'Salary': 3,
+        'Department': 4,
+        'Civil_status': 5
+    }
+    attribute_index = attributemapping.get(attribute)
+  
+    
+    if attribute_index is None:
+        raise ValueError(f"Invalid attribute '{attribute}' for update.")
+    
+
+    # Find the row to update by transaction_id
+    for row in data[1:]:  # Skip the header row
+        if row[0] == str(transaction_id):
+            before = row[attribute_index]  # Get the old value
+            row[attribute_index] = new  # Update the attribute with the new value
+            return row[attribute_index], before  # Return the new value and the old value
+ 
+
+
+def logUpdates(before,after,status,transaction_id):
+    log_entry = {
+        'Transaction_ID': transaction_id,
+        'Status': status,
+        'Before': before,
+        'After': after,
+    }
+    return log_entry
+        
+
   
 
-def logUpdates(before,after,status,count):  
-    log = {'Log_ID': count, 'Before':before, 'After': after,'UpdateStatus': status ,'TimeStamp': datetime.time} 
-    print(before,after) 
-
-    return log
+# Log for rollback (storing old values before modification)
 
 
+def rollback(data, logs):
+    print("\n***Initiating rollback to before state***\n")
+    for log in logs: 
+        if log['Status'] == 'Complete':
+            transaction_id = log['Transaction_ID']
+            before_value = log['Before']  # This is the 'old' value (before the update
+            # Find the transaction row and revert the changes using the 'Before' value
+            for transaction in transactions:
+                if transaction[0] == transaction_id:
+                    attribute = transaction[1]  # Find the correct attribute for the transaction
+                    update_db_row(data, transaction_id, attribute, before_value)  # Revert to old value
+                    break  # Exit the loop once the transaction is found
+    return data
 
 
-def is_there_a_failure():
-    print()
+
+
+
+def is_there_a_failure(count):
+    if count == 1:  # Hardcoded failure for the second transaction
+        return True
+    return False
     
 
 
 def main():
     logs = []
     count = 0
-    number_of_transactions = len(transactions)
+   # number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
-    
-
-    failure = is_there_a_failure()
+    failure = is_there_a_failure(count)
     failing_transaction_index = None
     # Process transaction
-    update_db_row(data_base,transactions,count)
 
-    for index in range(number_of_transactions):
-        print(f"\nProcessing transaction No. {index+1}.")
+    for index, transaction in enumerate(transactions):
+        transaction_id,attribute,new = transaction
+        print(f"\nProcessing transaction No. {index+1}: {transaction}.")
         # In your assignment, a failure will occur
         # whilst processing Transaction No. 2
-        failure = is_there_a_failure()
+        failure = is_there_a_failure(count)
         if failure:
             # Do Recovery process as per the proper method
             status = 'failure'
             must_recover = True
             failing_transaction_index = index + 1
-            print(f'There was a failure while processing the transaction # {failing_transaction_index}')
+            print(f"There was a failure while processing Transaction #{failing_transaction_index}")
+            data_base = rollback(data_base, logs)
             break
                 
         else:
+            after, before = update_db_row(data_base,transaction_id,attribute,new)
             status = 'Complete'
             # All good, update Log Record & DB as required
-            after, before = update_db_row(data_base,transactions,count)
             print("**************************************")
-            logs.append(logUpdates(before,after,status,count))
+            logs.append(logUpdates(before,after,status,transaction_id))
             count = count + 1  
 
             #putting main memory db(python list) into secondary memory(new csv file) after changes
@@ -120,12 +138,17 @@ def main():
             print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
             print('The data entries AFTER all work is completed are presented below:')
             
-
+    print("\nFinal State of the Database:")
     for item in data_base:
         print(item)
 
     # Print here the contents of your Log Record System, please.
-    print(logs)
+    print("\nTransaction Logs:")
+    for log in logs:
+        print(log)
+
+
+
 main()
 
 
