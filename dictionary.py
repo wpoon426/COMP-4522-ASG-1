@@ -33,24 +33,8 @@ def read_file(file_name:str)->dict:
 
 # function to update rows. 
 def update_db_row(data,transactions,log):
-    ''' attributemapping = {
-        'Salary': 3,
-        'Department': 4,
-        'Civil_status': 5
-    }
-    attribute_index = attributemapping.get(attribute)
-  
-    
-    if attribute_index is None:
-        raise ValueError(f"Invalid attribute '{attribute}' for update.")
-    
-
-    # Find the row to update by transaction_id
-    for row in data[1:]:  # Skip the header row
-        if row[0] == str(transaction_id):
-            before = row[attribute_index]  # Get the old value
-            row[attribute_index] = new  # Update the attribute with the new value
-            return row[attribute_index], before  # Return the new value and the old value '''
+    before_value = None
+    new_value = None  # Initialize new_value to store the updated value
     #loop thru 
     for items in data:
         status = 'incomplete'
@@ -64,9 +48,10 @@ def update_db_row(data,transactions,log):
                                 before_value = items[keys] 
                                 items[keys] = transactions[transID][items2.index(i)+1]
                                 new_value = items[keys]
-                                status = 'committed'
-                                log.append(logUpdates(len(log)+1,before_value,new_value,status))
-               
+                                status = 'comitted'
+                                log_entry = logUpdates(transactions[transID][0], before_value, new_value, status)  # Assuming the first element is transaction_id
+                                log.append(log_entry)
+                                break
     return before_value, new_value, log
         
 
@@ -75,43 +60,35 @@ def logUpdates(transaction_id,before,after,status):
     log_entry = [(transaction_id, before,after, status)]
 
     return log_entry
-    
 
-'''
+
 # Log for rollback (storing old values before modification)
-def rollback(data, logs):
+def rollback(log, data):
     print("\n***Initiating rollback to before state***\n")
-    for log in logs: 
-        if log['Status'] == 'Complete':
-            transaction_id = log['Transaction_ID']
-            before_value = log['Before']  # This is the 'old' value (before the update
-            # Find the transaction row and revert the changes using the 'Before' value
-            for transaction in transactions:
-                if transaction[0] == transaction_id:
-                    attribute = transaction[1]  # Find the correct attribute for the transaction
-                    update_db_row(data, transaction_id, attribute, before_value)  # Revert to old value
-                    break  # Exit the loop once the transaction is found
-    return data
-'''
 
-def dict_toList(data_dict):
-    body = []
-    header = []
-    for item in data_dict:
-        empty = []
-        for i in item.values():
-            body.append(i)
-    for key in item.keys():
-        header.append(key)
+    for logs in reversed(log):
 
-    return (header, body)
+        if len(logs) != 4:  # Ensure that the transaction logs at the end is printing properly
+            continue
+
+        transaction_id, before_value, new_value, status = logs
+        
+       
+        for item in data:
+            if item['Unique_ID'] == transaction_id:  
+                # This Reverts the change
+                item['value_key'] = before_value  
+                break
+
+    return data 
 
 
 def is_there_a_failure(count):
-    emptuy =[]
-    #if count == 1:  # Hardcoded failure for the second transaction
-       # return True
-   # return False
+
+# Hardcoded failure for the second transaction
+    if count == 1:  
+        return True
+    return False
     
 
 def main():
@@ -121,13 +98,9 @@ def main():
    # number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
-    
- 
     failure = is_there_a_failure(count)
     failing_transaction_index = None
     # Process transaction
-    #dict_toList(data_base)
-    #update_db_row(data_base,transactions)
     (before_value, after_value, logs) = update_db_row(data_base,transactions, log)
 
     for index, transaction in enumerate(transactions):
@@ -141,8 +114,8 @@ def main():
             status = 'failure'
             must_recover = True
             failing_transaction_index = index + 1
-            #print(f"There was a failure while processing Transaction #{failing_transaction_index}")
-            #data_base = rollback(data_base, logs)
+            print(f"There was a failure while processing Transaction #{failing_transaction_index}")
+            data_base = rollback(log, data_base)
             break
                 
         else:
@@ -154,10 +127,11 @@ def main():
             #putting main memory db(python list) into secondary memory(new csv file) after changes
             
             with open ('testDB.csv', 'w', newline = '') as csvfile:
-                writer = csv.writer(csvfile)
-                header, body = dict_toList(data_base)
-                writer.writerow(header)
-                writer.writerow(body)
+                header = ['Unique_ID', 'First_name', 'Last_name', 'Salary', 'Department', 'Civil_status']
+                writer = csv.DictWriter(csvfile, fieldnames=header)
+                body = data_base
+                writer.writeheader()
+                writer.writerows(body)
             
             #print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
             #print('The data entries AFTER all work is completed are presented below:')
@@ -170,7 +144,6 @@ def main():
     print("\nTransaction Logs:")
     for l in log:
        print(l)
-
 
 
 main()
