@@ -1,6 +1,5 @@
 
 import csv
-import datetime
 
 data_base = []
 
@@ -17,13 +16,11 @@ columns = [] #array for where columns are edited on csv
 def read_file(file_name:str)->dict:
     
     data = []
-
     # one line at-a-time reading file
     with open(file_name, 'r') as file:
     # Read and print the entire file line by line
         read_csv = csv.DictReader(file)
         data = [row for row in read_csv]
-        
     size = len(data)
     print('\nThe data entries BEFORE updates are presented below:\n')
     for item in data:
@@ -62,7 +59,6 @@ def logUpdates(transaction_id,column,before,after,status):
      return [(transaction_id,column,before,after, status)]
 
 
-
 # Log for rollback (storing old values before modification)
 def rollback(transaction_id,log, data, column):
     print("\n***Initiating rollback to before state***\n")
@@ -75,8 +71,7 @@ def rollback(transaction_id,log, data, column):
                             before = item2[2]
                             new_status = 'rolled-back'
                             # change status to rolled back. 
-                                # item2[4] = new_status
-                            print(item2[4])
+                            #item2[4] = new_status
                             # loop to go thru chnaged columns and match to the current failed transaction and changed
                             for c in columns:
                                 if c == item2[1]:
@@ -125,9 +120,9 @@ def main():
                 writer.writerows(body)
             
             print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
-            print('The data entries AFTER all work is completed are presented below:')
-            
+ 
     print("\nFinal State of the Database:")
+    print('The data entries AFTER all work is completed are presented below:')
     for item in data_base:
         print(item)
 
