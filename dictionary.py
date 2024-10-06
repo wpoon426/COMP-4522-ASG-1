@@ -10,22 +10,20 @@ transactions = [
     (5, 'Civil_status', 'Divorced'),  
     (15, 'Salary', '200000')
 ]
+log = []
 
 
-def read_file(file_name:str)->list:
+def read_file(file_name:str)->dict:
     
     data = []
     #
     # one line at-a-time reading file
     #
-    with open(file_name, 'r') as reader:
+    with open(file_name, 'r') as file:
     # Read and print the entire file line by line
-        line = reader.readline()
-        while line != '':  # The EOF char is an empty string
-            line = line.strip().split(',')
-            data.append(line)
-            # get the next line
-            line = reader.readline()
+        read_csv = csv.DictReader(file)
+        data = [row for row in read_csv]
+        
     size = len(data)
     print('\nThe data entries BEFORE updates are presented below:\n')
     for item in data:
@@ -34,10 +32,8 @@ def read_file(file_name:str)->list:
     return data
 
 # function to update rows. 
-# currently hardcoded. MUST change to not be 
-def update_db_row(data,transaction_id,attribute,new):
-
-    attributemapping = {
+def update_db_row(data,transactions,log):
+    ''' attributemapping = {
         'Salary': 3,
         'Department': 4,
         'Civil_status': 5
@@ -54,25 +50,35 @@ def update_db_row(data,transaction_id,attribute,new):
         if row[0] == str(transaction_id):
             before = row[attribute_index]  # Get the old value
             row[attribute_index] = new  # Update the attribute with the new value
-            return row[attribute_index], before  # Return the new value and the old value
- 
-
-
-def logUpdates(before,after,status,transaction_id):
-    log_entry = {
-        'Transaction_ID': transaction_id,
-        'Status': status,
-        'Before': before,
-        'After': after,
-    }
-    return log_entry
+            return row[attribute_index], before  # Return the new value and the old value '''
+    #loop thru 
+    for items in data:
+        status = 'incomplete'
+        for items2 in transactions:
+            for i in items2:
+                if(i == int(items['Unique_ID'])):
+                    transID = transactions.index(items2)
+                    for i in items2:
+                        for keys in items.keys():
+                            if (i == keys):
+                                before_value = items[keys] 
+                                items[keys] = transactions[transID][items2.index(i)+1]
+                                new_value = items[keys]
+                                status = 'committed'
+                                log.append(logUpdates(len(log)+1,before_value,new_value,status))
+               
+    return before_value, new_value, log
         
 
-  
 
+def logUpdates(transaction_id,before,after,status):
+    log_entry = [(transaction_id, before,after, status)]
+
+    return log_entry
+    
+
+'''
 # Log for rollback (storing old values before modification)
-
-
 def rollback(data, logs):
     print("\n***Initiating rollback to before state***\n")
     for log in logs: 
@@ -86,27 +92,43 @@ def rollback(data, logs):
                     update_db_row(data, transaction_id, attribute, before_value)  # Revert to old value
                     break  # Exit the loop once the transaction is found
     return data
+'''
 
+def dict_toList(data_dict):
+    body = []
+    header = []
+    for item in data_dict:
+        empty = []
+        for i in item.values():
+            body.append(i)
+    for key in item.keys():
+        header.append(key)
 
-
+    return (header, body)
 
 
 def is_there_a_failure(count):
-    if count == 1:  # Hardcoded failure for the second transaction
-        return True
-    return False
+    emptuy =[]
+    #if count == 1:  # Hardcoded failure for the second transaction
+       # return True
+   # return False
     
-
 
 def main():
     logs = []
     count = 0
+    
    # number_of_transactions = len(transactions)
     must_recover = False
     data_base = read_file('Employees_DB_ADV.csv')
+    
+ 
     failure = is_there_a_failure(count)
     failing_transaction_index = None
     # Process transaction
+    #dict_toList(data_base)
+    #update_db_row(data_base,transactions)
+    (before_value, after_value, logs) = update_db_row(data_base,transactions, log)
 
     for index, transaction in enumerate(transactions):
         transaction_id,attribute,new = transaction
@@ -119,24 +141,26 @@ def main():
             status = 'failure'
             must_recover = True
             failing_transaction_index = index + 1
-            print(f"There was a failure while processing Transaction #{failing_transaction_index}")
-            data_base = rollback(data_base, logs)
+            #print(f"There was a failure while processing Transaction #{failing_transaction_index}")
+            #data_base = rollback(data_base, logs)
             break
                 
         else:
-            after, before = update_db_row(data_base,transaction_id,attribute,new)
             status = 'Complete'
             # All good, update Log Record & DB as required
-            print("**************************************")
-            logs.append(logUpdates(before,after,status,transaction_id))
+            #logs.append(logUpdates(before,after,status,transaction_id))
             count = count + 1  
 
             #putting main memory db(python list) into secondary memory(new csv file) after changes
-            with open ('testDB.csv', 'w', newline='') as csvfile:
+            
+            with open ('testDB.csv', 'w', newline = '') as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerows(data_base)
-            print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
-            print('The data entries AFTER all work is completed are presented below:')
+                header, body = dict_toList(data_base)
+                writer.writerow(header)
+                writer.writerow(body)
+            
+            #print(f'Transaction No. {index+1} has been committed!Changes are permanent.')
+            #print('The data entries AFTER all work is completed are presented below:')
             
     print("\nFinal State of the Database:")
     for item in data_base:
@@ -144,8 +168,8 @@ def main():
 
     # Print here the contents of your Log Record System, please.
     print("\nTransaction Logs:")
-    for log in logs:
-        print(log)
+    for l in log:
+       print(l)
 
 
 
