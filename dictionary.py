@@ -1,4 +1,4 @@
-
+# Authors: Franklin Poon and Zaarif Sardar
 import csv
 
 data_base = []
@@ -38,8 +38,8 @@ def update_db_row(data,transactions,log):
         for items2 in transactions:
             for i in items2:
                 if(i == int(items['Unique_ID'])):# check if row logged transaction id lines up with the looped through row of main memory
-                    transID = transactions.index(items2) # get the id of transaction
-                    for i in items2:#loop through items in diction
+                    transID = transactions.index(items2) # get the id of transaction if match
+                    for i in items2:#loop through items in dictionary(main memory)
                         for keys in items.keys():#loop through items in dictionary aka main memory
                             if (i == keys):# if value in log equal one of the keys in dictonary (column name) change the value per transaction
                                 before_value = items[keys] 
@@ -63,7 +63,7 @@ def logUpdates(transaction_id,column,before,after,status):
 def rollback(transaction_id,log, data, column):
     print("\n***Initiating rollback to before state***\n")
     for item in data:# loop thru data of main memory
-        if item['Unique_ID'] == str(transaction_id):
+        if item['Unique_ID'] == str(transaction_id): #find user in main memory according to transaction id in log
             for l in log:
                 for item2 in l:
                     for i in item2:
@@ -72,7 +72,7 @@ def rollback(transaction_id,log, data, column):
                             new_status = 'rolled-back'
                             # change status to rolled back. 
                             #item2[4] = new_status
-                            # loop to go thru chnaged columns and match to the current failed transaction and changed
+                            # loop to go thru changed columns and match to the current failed transaction and revert back
                             for c in columns:
                                 if c == item2[1]:
                                     item[c] = before
@@ -90,11 +90,11 @@ def is_there_a_failure(count):
 def main():
     count = 0    
     must_recover = False
-    data_base = read_file('Employees_DB_ADV.csv')
-    failure = is_there_a_failure(count)
+    data_base = read_file('Employees_DB_ADV.csv')# read function for csv file. Parses data into dict
+    failure = is_there_a_failure(count)#failure simulator for rollback function call
     failing_transaction_index = None
     # Process transaction
-    (before_value, after_value, logs, column) = update_db_row(data_base,transactions, log)
+    (before_value, after_value, logs, column) = update_db_row(data_base,transactions, log)# update per transactions
     for index, transaction in enumerate(transactions):
         transaction_id,attribute,new = transaction
         print(f"\nProcessing transaction No. {index+1}: {transaction}.")
@@ -105,14 +105,14 @@ def main():
             must_recover = True
             failing_transaction_index = index + 1
             print(f"There was a failure while processing Transaction #{failing_transaction_index}")
-            data_base = rollback(transaction_id,log, data_base, column)
+            data_base = rollback(transaction_id,log, data_base, column)# roll back to old info due to failure
             count = count + 1
                 
         else:
             status = 'Complete'
             count = count + 1  
             #putting main memory db(python dictionary) into secondary memory(new csv file) after changes
-            with open ('testDB.csv', 'w', newline = '') as csvfile:
+            with open ('Employees_DB_2.csv', 'w', newline = '') as csvfile:
                 header = ['Unique_ID', 'First_name', 'Last_name', 'Salary', 'Department', 'Civil_status']
                 writer = csv.DictWriter(csvfile, fieldnames=header)
                 body = data_base
